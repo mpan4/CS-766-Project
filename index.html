@@ -106,6 +106,32 @@
     .hero-meta{display:flex;flex-wrap:wrap;gap:var(--space-6);font-size:var(--text-xs);color:var(--color-text-muted);}
     .hero-meta-item{display:flex;align-items:center;gap:var(--space-2);}
     .hero-meta-item svg{color:var(--color-primary);flex-shrink:0;}
+
+    .project-links{
+      display:flex;
+      flex-wrap:wrap;
+      gap:var(--space-3);
+      margin-top:var(--space-6);
+      margin-bottom:var(--space-2);
+    }
+    .project-links a{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:var(--space-2) var(--space-4);
+      border-radius:var(--radius-full);
+      text-decoration:none;
+      font-size:var(--text-sm);
+      font-weight:600;
+      color:var(--color-primary);
+      background:oklch(from var(--color-primary) l c h / 0.08);
+      border:1px solid oklch(from var(--color-primary) l c h / 0.22);
+    }
+    .project-links a:hover{
+      color:white;
+      background:var(--color-primary);
+    }
+
     .abstract-box{margin-top:var(--space-8);background:var(--color-surface);
       border:1px solid oklch(from var(--color-text) l c h/0.08);border-radius:var(--radius-xl);
       padding:var(--space-6);box-shadow:var(--shadow-sm);}
@@ -201,7 +227,6 @@
       border-radius:var(--radius-full);border:1px solid oklch(from var(--color-primary) l c h/0.25);
       color:var(--color-primary);background:oklch(from var(--color-primary) l c h/0.07);}
 
-
     /* Footer */
     .site-footer{border-top:1px solid var(--color-divider);padding-block:var(--space-8);
       color:var(--color-text-faint);font-size:var(--text-xs);}
@@ -252,7 +277,6 @@
         <a href="#implementation">Implementation</a>
         <a href="#results">Results</a>
         <a href="#discussion">Discussion</a>
-        
       </nav>
       <div style="display:flex;align-items:center;gap:var(--space-3);">
         <button class="theme-btn" data-theme-toggle aria-label="Switch theme">
@@ -276,7 +300,6 @@
   <a href="#implementation" onclick="closeMobileNav()">Implementation</a>
   <a href="#results" onclick="closeMobileNav()">Results</a>
   <a href="#discussion" onclick="closeMobileNav()">Discussion</a>
-  
 </nav>
 
 <!-- Hero -->
@@ -301,6 +324,13 @@
         Spring 2026
       </span>
     </div>
+
+    <div class="project-links">
+      <a href="https://github.com/mpan4/CS-766-Project/blob/main/final_code.py" target="_blank" rel="noopener noreferrer">View Code</a>
+      <a href="https://github.com/mpan4/CS-766-Project/raw/main/766%20Final%20Presentation.pptx" target="_blank" rel="noopener noreferrer">View PowerPoint</a>
+      <a href="https://github.com/mpan4/CS-766-Project/raw/main/final_project.pdf" target="_blank" rel="noopener noreferrer">View PDF</a>
+    </div>
+
     <div class="abstract-box">
       <p class="abstract-label">Abstract</p>
       <p>Recognizing proper blood separation after centrifugation is critical for specimen quality assessment in clinical laboratories. After centrifugation, blood separates into three distinct layers: plasma, buffy coat, and red blood cells. Current manual training methods suffer from subjectivity, time consumption, and lack of standardized feedback. This work presents an automated system employing a U-Net architecture with semi-automatic annotation using the Segment Anything Model (SAM) to enable real-time blood layer detection. The proposed approach combines semantic segmentation with an active learning-inspired annotation strategy and MobileNet-based region-of-interest localization to reduce annotation burden while maintaining high accuracy. A dataset of over 300 blood tube images, augmented through color perturbations, is used to train the model, and performance is evaluated using pixel-wise accuracy and distance-based metrics between predicted and true layer boundaries.</p>
@@ -408,27 +438,24 @@
           <p>
             The full pipeline is implemented in <strong>TensorFlow/Keras</strong>. A custom data generator orchestrates joint loading, detection, preprocessing, and augmentation for each training batch — running the MobileNet detector, normalizing pixel intensities to [0, 1], padding images to 2048px height, and extracting the 368×368 crop centered on the detected transition region.
           </p>
-
           <h3>U-Net Architecture</h3>
           <p>
-            The segmentation model follows the canonical U-Net encoder–decoder design with modifications for RGB input and four-class output:
+            The segmentation model follows the canonical U-Net encoder–decoder design with modifications for RGB input and four-class output.
           </p>
           <ul>
             <li><strong>Encoder:</strong> Four downsampling levels with 64, 128, 256, and 512 filters each, followed by max pooling. ReLU activations, same padding, He normal initialization.</li>
-            <li><strong>Bottleneck:</strong> Two convolutional layers with 1024 filters and dropout (rate 0.5) for regularization.</li>
+            <li><strong>Bottleneck:</strong> Two convolutional layers with 1024 filters and dropout rate 0.5 for regularization.</li>
             <li><strong>Decoder:</strong> Four upsampling levels mirroring the encoder, each concatenating encoder features via skip connections for high-resolution spatial detail.</li>
             <li><strong>Output:</strong> 1×1 convolution with softmax producing a 368×368×4 probability map over the four classes.</li>
           </ul>
-
           <h3>Training Setup</h3>
           <ul>
             <li><strong>Loss:</strong> Sparse categorical cross-entropy</li>
-            <li><strong>Optimizer:</strong> Adam (learning rate 1×10⁻⁴)</li>
+            <li><strong>Optimizer:</strong> Adam, learning rate \(1 \times 10^{-4}\)</li>
             <li><strong>Metrics:</strong> Pixel-wise sparse categorical accuracy</li>
-            <li><strong>Checkpointing:</strong> Best model saved on validation loss; exported as both <code>.h5</code> and frozen TensorFlow graph</li>
+            <li><strong>Checkpointing:</strong> Best model saved on validation loss, exported as both `.h5` code and frozen TensorFlow graph</li>
             <li><strong>Input size:</strong> 368×368×3 RGB</li>
           </ul>
-
           <h3>Key Design Decision: Offline vs. On-the-Fly Augmentation</h3>
           <p>
             An earlier object-detection-only approach used standard on-the-fly augmentation, which produced limited robustness to lighting variation. Switching to <em>offline</em> color augmentation — pre-generating multiple copies of each training image with randomized hue/contrast/saturation perturbations — significantly improved generalization, particularly for the thin buffy coat layer where color cues are critical. This is the most important implementation-level finding of the project.
@@ -440,19 +467,19 @@
           <span class="section-badge">04 · Results</span>
           <h2 id="results-heading">Results</h2>
           <p>
-            Performance is evaluated on a held-out set of <strong>100 manually annotated images</strong> not used during training or validation. For each image, predicted transition heights (extracted by scanning the segmentation mask for class boundaries) are compared against expert ground-truth annotations. The key metric is average absolute difference in pixels between predicted and true transition heights.
+            Performance is evaluated on a held-out set of <strong>100 manually annotated images</strong> not used during training or validation. For each image, predicted transition heights extracted by scanning the segmentation mask for class boundaries are compared against expert ground-truth annotations. The key metric is average absolute difference in pixels between predicted and true transition heights.
           </p>
 
           <div class="kpi-grid">
             <div class="kpi-card">
               <p class="kpi-label">Best Plasma–Buffy Error</p>
               <p class="kpi-value">5.00 px</p>
-              <p class="kpi-desc">Models 1 &amp; 2 (tied best on plasma–buffy transition)</p>
+              <p class="kpi-desc">Models 1 &amp; 2 tied best on plasma–buffy transition</p>
             </div>
             <div class="kpi-card">
               <p class="kpi-label">Best Buffy–Blood Error</p>
               <p class="kpi-value">0.96 px</p>
-              <p class="kpi-desc">Model 2 — sub-pixel precision on buffy–blood boundary</p>
+              <p class="kpi-desc">Model 2 achieved sub-pixel precision on buffy–blood boundary</p>
             </div>
             <div class="kpi-card">
               <p class="kpi-label">Test Set Size</p>
@@ -466,7 +493,7 @@
             </div>
           </div>
 
-          <h3>Model Comparison (Avg. Absolute Difference, pixels)</h3>
+          <h3>Model Comparison: Avg. Absolute Difference (pixels)</h3>
           <div class="results-table-wrap">
             <table>
               <thead>
@@ -480,14 +507,14 @@
               </thead>
               <tbody>
                 <tr>
-                  <td><strong>Plasma – Buffy Coat</strong></td>
+                  <td><strong>Plasma → Buffy Coat</strong></td>
                   <td class="best">5.00</td>
                   <td class="best">5.00</td>
                   <td>6.76</td>
                   <td>11.02</td>
                 </tr>
                 <tr>
-                  <td><strong>Buffy Coat – Red Blood Cells</strong></td>
+                  <td><strong>Buffy Coat → Red Blood Cells</strong></td>
                   <td>1.42</td>
                   <td class="best">0.96</td>
                   <td>3.25</td>
@@ -496,7 +523,7 @@
               </tbody>
             </table>
           </div>
-          <p class="table-caption">Table 1. Average absolute difference (pixels) between predicted and true transition heights for plasma–buffy and buffy–blood layers across four model variants. Lower is better; best values in green.</p>
+          <p class="table-caption">Table 1. Average absolute difference (pixels) between predicted and true transition heights for plasma–buffy and buffy–blood layers across four model variants. Lower is better; best values shown in green.</p>
 
           <div class="callout">
             <p class="callout-label">Notable Finding</p>
@@ -514,7 +541,7 @@
           <span class="section-badge">05 · Discussion</span>
           <h2 id="discussion-heading">Discussion</h2>
           <p>
-            The proposed hybrid pipeline demonstrates clinically relevant precision in estimating layer boundaries, supporting its potential use in phlebotomy training platforms and standardized laboratory quality control. The combination of SAM-assisted annotation, offline color augmentation, and two-stage detection + segmentation each contributed meaningfully to final performance.
+            The proposed hybrid pipeline demonstrates clinically relevant precision in estimating layer boundaries, supporting its potential use in phlebotomy training platforms and standardized laboratory quality control. The combination of SAM-assisted annotation, offline color augmentation, and two-stage detection/segmentation each contributed meaningfully to final performance.
           </p>
 
           <h3>Problems Encountered</h3>
@@ -528,6 +555,7 @@
                 <p class="problem-desc">The model shows sensitivity to extreme variations in buffy coat thickness. Samples with unusually thin or thick buffy coats produce larger boundary errors, as the model has seen fewer examples of extreme cases during training.</p>
               </div>
             </div>
+
             <div class="problem-item">
               <span class="problem-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -537,22 +565,24 @@
                 <p class="problem-desc">Occasional errors occur when tube labels or imaging artifacts intersect the layer boundaries, confusing the segmentation model. Manual annotation for these edge cases was particularly time-consuming.</p>
               </div>
             </div>
+
             <div class="problem-item">
               <span class="problem-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               </span>
               <div>
-                <p class="problem-title">Limited Evaluation Metrics</p>
-                <p class="problem-desc">The current evaluation focuses on height differences only. This misses cases where the mask shape is correct but the boundary height estimate deviates — or vice versa. A broader metric suite (Dice, IoU, class-wise precision/recall) would give a more complete picture.</p>
+                <p class="problem-title">Limited Evaluation Metric</p>
+                <p class="problem-desc">The current evaluation focuses on height differences only. This misses cases where the mask shape is correct but the boundary height estimate deviates, or vice versa. A broader metric suite — Dice, IoU, class-wise precision/recall — would give a more complete picture.</p>
               </div>
             </div>
+
             <div class="problem-item">
               <span class="problem-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               </span>
               <div>
                 <p class="problem-title">Annotation Bottleneck</p>
-                <p class="problem-desc">Even with SAM assistance, generating high-quality pixel masks for 300+ images was labor-intensive, particularly for the thin buffy coat region where SAM's initial masks required significant manual refinement.</p>
+                <p class="problem-desc">Even with SAM assistance, generating high-quality pixel masks for 300 images was labor-intensive, particularly for the thin buffy coat region where SAM’s initial masks required significant manual refinement.</p>
               </div>
             </div>
           </div>
@@ -564,15 +594,15 @@
           <ul>
             <li>Expand dataset to additional specimen and tube types to improve generalization</li>
             <li>Add Dice coefficient, Intersection over Union (IoU), and class-wise precision/recall to the evaluation suite</li>
-            <li>Benchmark against alternative architectures (e.g., transformer-based segmentation models)</li>
+            <li>Benchmark against alternative architectures, such as transformer-based segmentation models</li>
             <li>Deploy in a mobile or web-based interface for point-of-care use in training environments</li>
-            <li>Integrate a full active learning loop — the pipeline is already designed to be compatible — to continuously refine performance as new data are collected</li>
+            <li>Integrate a full active learning loop, since the pipeline is already designed to be compatible with continuous refinement as new data are collected</li>
             <li>Incorporate Dice loss or boundary-aware losses to further emphasize accurate layer transition localization</li>
           </ul>
         </section>
 
-        </div><!-- .sections -->
-    </div><!-- .page-layout -->
+      </div>
+    </div>
   </div>
 </main>
 
@@ -586,46 +616,50 @@
 </footer>
 
 <script>
-  // Theme toggle
-  (function(){
-    const t=document.querySelector('[data-theme-toggle]'),r=document.documentElement;
-    let d=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
-    r.setAttribute('data-theme',d);
-    function setIcon(){if(!t)return;t.innerHTML=d==='dark'
-      ?'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
-      :'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-      t.setAttribute('aria-label','Switch to '+(d==='dark'?'light':'dark')+' mode');}
+  const t = document.querySelector('[data-theme-toggle]'),
+        r = document.documentElement;
+  let d = matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light';
+  r.setAttribute('data-theme', d);
+
+  function setIcon() {
+    if (!t) return;
+    t.innerHTML = d === 'dark'
+      ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
+      : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    t.setAttribute('aria-label', 'Switch to ' + (d === 'dark' ? 'light' : 'dark') + ' mode');
+  }
+  setIcon();
+  t.addEventListener('click', () => {
+    d = d === 'dark' ? 'light' : 'dark';
+    r.setAttribute('data-theme', d);
     setIcon();
-    t&&t.addEventListener('click',()=>{d=d==='dark'?'light':'dark';r.setAttribute('data-theme',d);setIcon();});
-  })();
+  });
 
-  // Header scroll
-  const hdr=document.getElementById('site-header');
-  window.addEventListener('scroll',()=>{hdr.classList.toggle('site-header--scrolled',window.scrollY>60);},{passive:true});
+  const hdr = document.getElementById('site-header');
+  window.addEventListener('scroll', () => hdr.classList.toggle('site-header--scrolled', window.scrollY > 60), { passive: true });
 
-  // TOC active
-  const secs=document.querySelectorAll('.section');
-  const tocLinks=document.querySelectorAll('.toc-link');
-  new IntersectionObserver((entries)=>{
-    entries.forEach(e=>{
-      if(e.isIntersecting){
-        tocLinks.forEach(l=>l.classList.remove('toc-active'));
-        const a=document.querySelector(`.toc-link[href="#${e.target.id}"]`);
-        if(a)a.classList.add('toc-active');
+  const secs = document.querySelectorAll('.section');
+  const tocLinks = document.querySelectorAll('.toc-link');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        tocLinks.forEach(l => l.classList.remove('toc-active'));
+        const a = document.querySelector('.toc-link[href="#' + e.target.id + '"]');
+        if (a) a.classList.add('toc-active');
       }
     });
-  },{rootMargin:'-20% 0px -60% 0px'}).observe&&secs.forEach(s=>new IntersectionObserver(
-    (entries)=>{entries.forEach(e=>{if(e.isIntersecting){tocLinks.forEach(l=>l.classList.remove('toc-active'));const a=document.querySelector(`.toc-link[href="#${e.target.id}"]`);if(a)a.classList.add('toc-active');}});},
-    {rootMargin:'-20% 0px -60% 0px'}
-  ).observe(s));
+  }, { rootMargin: '-20% 0px -60% 0px' });
+  secs.forEach(s => observer.observe(s));
 
-  // Mobile nav
-  function closeMobileNav(){document.getElementById('mobile-nav').classList.remove('open');}
-  document.getElementById('mobile-menu-open').addEventListener('click',()=>{document.getElementById('mobile-nav').classList.add('open');});
-  document.getElementById('mobile-menu-close').addEventListener('click',closeMobileNav);
+  function closeMobileNav() {
+    document.getElementById('mobile-nav').classList.remove('open');
+  }
+  document.getElementById('mobile-menu-open').addEventListener('click', () => {
+    document.getElementById('mobile-nav').classList.add('open');
+  });
+  document.getElementById('mobile-menu-close').addEventListener('click', closeMobileNav);
 
-
-  document.getElementById('footer-year').textContent=new Date().getFullYear();
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
 </script>
 </body>
 </html>
